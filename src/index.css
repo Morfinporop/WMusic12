@@ -1,0 +1,311 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  background: #000;
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #0b0b0b;
+}
+::-webkit-scrollbar-thumb {
+  background: #242424;
+  border-radius: 8px;
+  border: 2px solid #0b0b0b;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3a3a3a;
+}
+
+input[type=range] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+input[type=range]::-webkit-slider-track {
+  height: 4px;
+  border-radius: 2px;
+  background: #333;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  margin-top: -5px;
+  transition: transform 0.15s;
+}
+input[type=range]:hover::-webkit-slider-thumb {
+  transform: scale(1.2);
+}
+
+.glass {
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.glass-dark {
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes pulse-bar {
+  0%, 100% { transform: scaleY(0.4); }
+  50% { transform: scaleY(1); }
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-fade-in { animation: fadeIn 0.25s ease forwards; }
+.animate-slide-right { animation: slideInRight 0.25s ease forwards; }
+
+.waveform-bar {
+  display: inline-block;
+  width: 3px;
+  border-radius: 2px;
+  transition: all 0.1s;
+}
+.waveform-bar.playing {
+  animation: pulse-bar 0.6s ease-in-out infinite;
+}
+
+.sound-card:hover .soundpad-overlay {
+  opacity: 1;
+}
+.soundpad-overlay {
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+@media (hover: none) {
+  .soundpad-overlay {
+    opacity: 1;
+  }
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+  font-size: 15px;
+  color: #cfcfcf;
+  user-select: none;
+  white-space: nowrap;
+}
+.nav-item:hover {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  transform: translateY(-1px);
+}
+.nav-item.active {
+  background: rgba(255,255,255,0.16);
+  color: #050505;
+  font-weight: 600;
+}
+
+.tag-pill {
+  background: rgba(255,255,255,0.08);
+  border-radius: 4px;
+  padding: 2px 7px;
+  font-size: 11px;
+  color: #ccc;
+  white-space: nowrap;
+}
+
+.progress-bar {
+  position: relative;
+  height: 4px;
+  background: #333;
+  border-radius: 2px;
+  cursor: pointer;
+}
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #fff 0%, #aaa 100%);
+  transition: width 0.1s linear;
+}
+.progress-bar:hover .progress-thumb {
+  opacity: 1;
+}
+.progress-thumb {
+  position: absolute;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  background: #fff;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+select {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  color: #fff;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 14px;
+  outline: none;
+  width: 100%;
+}
+select:focus {
+  border-color: #555;
+}
+
+textarea, input[type=text] {
+  background: #111;
+  border: 1px solid #2a2a2a;
+  color: #fff;
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 14px;
+  outline: none;
+  width: 100%;
+  resize: none;
+  transition: border-color 0.2s;
+}
+textarea:focus, input[type=text]:focus {
+  border-color: #444;
+}
+textarea::placeholder, input[type=text]::placeholder {
+  color: #555;
+}
+
+.btn-primary {
+  background: #fff;
+  color: #000;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+.btn-primary:hover {
+  background: #e0e0e0;
+}
+.btn-primary:active {
+  transform: scale(0.97);
+}
+.btn-primary:disabled {
+  background: #333;
+  color: #666;
+  cursor: not-allowed;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: #aaa;
+  border: 1px solid #333;
+  border-radius: 6px;
+  padding: 9px 18px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.btn-ghost:hover {
+  background: rgba(255,255,255,0.07);
+  color: #fff;
+}
+
+.icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: background 0.15s, color 0.15s, transform 0.1s;
+  color: #888;
+}
+.icon-btn:hover {
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+}
+.icon-btn:active {
+  transform: scale(0.9);
+}
+.icon-btn.active {
+  color: #1db954;
+}
+
+@media (max-width: 960px) {
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .nav-item {
+    padding: 12px 13px;
+    font-size: 15px;
+    gap: 12px;
+  }
+
+  .tag-pill {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+}
+
+.region-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.15s;
+  background: rgba(255,255,255,0.05);
+  color: #ccc;
+  white-space: nowrap;
+}
+.region-btn:hover {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+}
+.region-btn.active {
+  background: #fff;
+  color: #000;
+  font-weight: 600;
+}
