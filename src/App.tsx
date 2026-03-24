@@ -1066,14 +1066,13 @@ export default function App() {
           <div style={{ textAlign: 'center', width: 340, maxWidth: '92vw' }}>
             <div
               style={{
-                width: 78,
-                height: 78,
+                width: 72,
+                height: 72,
                 margin: '0 auto 18px',
                 borderRadius: '50%',
-                border: '3px solid rgba(255,255,255,0.16)',
-                background: 'conic-gradient(from 0deg, #fff 0 26%, rgba(255,255,255,0.08) 26% 100%)',
-                animation: 'spin 1s linear infinite',
-                boxShadow: '0 0 0 1px rgba(255,255,255,0.04) inset',
+                border: '4px solid #2b2b2b',
+                borderTopColor: '#ffffff',
+                animation: 'spin 0.9s linear infinite',
               }}
             />
             <div style={{ fontSize: 18, fontWeight: 800 }}>Проверяем ваш браузер</div>
