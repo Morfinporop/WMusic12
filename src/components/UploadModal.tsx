@@ -22,6 +22,7 @@ export default function UploadModal({ onClose, onUpload, availableGenres = [] }:
   const [showUrlInput, setShowUrlInput] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [isLoud, setIsLoud] = useState(false);
   const [showPolicy, setShowPolicy] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -79,6 +80,7 @@ export default function UploadModal({ onClose, onUpload, availableGenres = [] }:
         duration,
         file,
         coverFile,
+        isLoud,
         urlInput: urlInput.trim() || undefined,
       });
     } finally {
@@ -329,6 +331,21 @@ export default function UploadModal({ onClose, onUpload, availableGenres = [] }:
               )}
             </div>
             <div style={{ fontSize: '11px', color: '#555', marginTop: '4px' }}>Добавьте фон к карточке звука (макс. 5МБ).</div>
+          </div>
+
+          {/* Agreement */}
+          <div style={{ marginBottom: '12px' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={isLoud}
+                onChange={e => setIsLoud(e.target.checked)}
+                style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: '#ff4a4a' }}
+              />
+              <span style={{ fontSize: '13px', color: '#bbb' }}>
+                Громкий звук: показывать предупреждение слушателям
+              </span>
+            </label>
           </div>
 
           {/* Agreement */}

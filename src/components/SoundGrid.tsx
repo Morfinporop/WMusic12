@@ -24,6 +24,7 @@ interface SoundGridProps {
   onCommentAdd?: (soundId: string, text: string, parentId?: string) => void;
   onCommentLike?: (commentId: string) => void;
   onCommentDelete?: (commentId: string) => void;
+  onCommentOpen?: (soundId: string) => void;
   onDelete?: (soundId: string) => void;
   showDelete?: boolean;
   layout?: 'grid' | 'list';
@@ -36,7 +37,7 @@ interface SoundGridProps {
 export default function SoundGrid({
   title, topBanner, sounds, allSounds, categories = ['all', 'rock', 'pop', 'vibe', 'trap', 'meme'], regionFilter, setRegionFilter,
   showRegionFilter, currentSound, isPlaying, currentTime = 0, likedIds,
-  onPlay, onLike, onDownload, onAddToSoundpad, commentsBySound = {}, clientId, onCommentAdd, onCommentLike, onCommentDelete, onDelete, showDelete, layout = 'grid', lang = 'ru',
+  onPlay, onLike, onDownload, onAddToSoundpad, commentsBySound = {}, clientId, onCommentAdd, onCommentLike, onCommentDelete, onCommentOpen, onDelete, showDelete, layout = 'grid', lang = 'ru',
   compact = false, showCover = true, coverBlur = 7,
 }: SoundGridProps) {
   return (
@@ -82,7 +83,7 @@ export default function SoundGrid({
                 onLike={onLike}
                 onDownload={onDownload}
                 onAddToSoundpad={onAddToSoundpad || (() => {})}
-                onComment={() => undefined}
+                onComment={() => onCommentOpen?.(s.id)}
                 comments={commentsBySound[s.id] || []}
                 currentClientId={clientId}
                 onCommentAdd={onCommentAdd}
@@ -115,7 +116,7 @@ export default function SoundGrid({
                 onLike={onLike}
                 onDownload={onDownload}
                 onAddToSoundpad={onAddToSoundpad || (() => {})}
-                onComment={() => undefined}
+                onComment={() => onCommentOpen?.(s.id)}
                 comments={commentsBySound[s.id] || []}
                 currentClientId={clientId}
                 onCommentAdd={onCommentAdd}

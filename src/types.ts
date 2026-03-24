@@ -12,6 +12,7 @@ export interface Sound {
   coverUrl?: string;
   description?: string;
   lyrics?: string;
+  isLoud?: boolean;
   isMine?: boolean;
 }
 

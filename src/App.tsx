@@ -142,6 +142,7 @@ export default function App() {
   const [preferTranslated, setPreferTranslated] = useState<boolean>(() => localStorage.getItem('wmusic_prefer_translated') === '1');
   const [preferPopular, setPreferPopular] = useState<boolean>(() => localStorage.getItem('wmusic_prefer_popular') === '1');
   const [showVolumeWarning, setShowVolumeWarning] = useState<boolean>(() => localStorage.getItem('wmusic_volume_warning') !== '0');
+  const [autoplayNext, setAutoplayNext] = useState<boolean>(() => localStorage.getItem('wmusic_autoplay_next') !== '0');
   const [showBrowserCheck, setShowBrowserCheck] = useState(true);
   const [browserCheckResult, setBrowserCheckResult] = useState<BrowserCheckResult | null>(null);
   const [likedIds, setLikedIds] = useState<Set<string>>(() => {
@@ -193,6 +194,8 @@ export default function App() {
   const audioContextRef = useRef<AudioContext | null>(null);
   const sourceNodeRef = useRef<MediaElementAudioSourceNode | null>(null);
   const gainNodeRef = useRef<GainNode | null>(null);
+  const filterNodeRef = useRef<BiquadFilterNode | null>(null);
+  const lastTimeUpdateRef = useRef(0);
   const [bannerIndex, setBannerIndex] = useState(0);
   const [isMobile, setIsMobile] = useState<boolean>(() => window.innerWidth < 960);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -226,21 +229,8 @@ export default function App() {
   }, [isMobile]);
 
   useEffect(() => {
-    if (!sounds.length) return;
-    const toLoad = sounds.slice(0, 60);
-    Promise.all(toLoad.map((sound) => fetchComments(sound.id).catch(() => [])))
-      .then((groups) => {
-        const next: Record<string, Comment[]> = {};
-        groups.forEach((items, index) => {
-          next[toLoad[index].id] = items.map((comment) => ({
-            ...comment,
-            createdAt: new Date(comment.createdAt),
-          }));
-        });
-        setCommentsBySound(next);
-      })
-      .catch(() => undefined);
-  }, [sounds]);
+    // Keep initial render light on mobile. Comments are loaded lazily per track.
+  }, [sounds.length]);
 
   const showToast = (text: string) => {
     setToast(text);
@@ -308,6 +298,10 @@ export default function App() {
   }, [showVolumeWarning]);
 
   useEffect(() => {
+    localStorage.setItem('wmusic_autoplay_next', autoplayNext ? '1' : '0');
+  }, [autoplayNext]);
+
+  useEffect(() => {
     if (!showVolumeWarning) return;
     if (playerState.volume * audioBoost >= 1.6) {
       showToast('Высокая громкость может повредить слух.');
@@ -334,6 +328,36 @@ export default function App() {
     audio.volume = Math.max(0, Math.min(1, clamped));
   }, []);
 
+  const resolveQualityMode = useCallback((): 'high' | 'balanced' | 'data' => {
+    if (audioQuality !== 'auto') return audioQuality;
+    const connection = (navigator as Navigator & {
+      connection?: { effectiveType?: string; downlink?: number };
+    }).connection;
+    const effectiveType = connection?.effectiveType || '';
+    const downlink = connection?.downlink || 0;
+    if (effectiveType.includes('2g') || downlink < 1) return 'data';
+    if (effectiveType.includes('3g') || downlink < 4) return 'balanced';
+    return 'high';
+  }, [audioQuality]);
+
+  const applyQualityProfile = useCallback(() => {
+    const mode = resolveQualityMode();
+    const filter = filterNodeRef.current;
+    if (!filter) return;
+
+    filter.type = 'lowpass';
+    filter.Q.value = 0.0001;
+    if (mode === 'high') {
+      filter.frequency.value = 22050;
+      return;
+    }
+    if (mode === 'balanced') {
+      filter.frequency.value = 14500;
+      return;
+    }
+    filter.frequency.value = 9000;
+  }, [resolveQualityMode]);
+
   const ensureAudioGraph = useCallback(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -348,25 +372,37 @@ export default function App() {
     try {
       const ctx = new Ctx();
       const source = ctx.createMediaElementSource(audio);
+      const filter = ctx.createBiquadFilter();
       const gain = ctx.createGain();
-      source.connect(gain);
+      source.connect(filter);
+      filter.connect(gain);
       gain.connect(ctx.destination);
       audioContextRef.current = ctx;
       sourceNodeRef.current = source;
+      filterNodeRef.current = filter;
       gainNodeRef.current = gain;
+      applyQualityProfile();
       setOutputGain(playerState.volume * audioBoost);
     } catch {
       // Browser can block creating graph multiple times for same element.
     }
-  }, [audioBoost, playerState.volume, setOutputGain]);
+  }, [applyQualityProfile, audioBoost, playerState.volume, setOutputGain]);
 
   const syncPlaylists = useCallback(() => {
     setPlaylists(loadPlaylists());
   }, []);
 
   useEffect(() => {
-    const id = window.setInterval(syncPlaylists, 1500);
-    return () => clearInterval(id);
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === 'wmusic_playlists') syncPlaylists();
+    };
+    const onFocus = () => syncPlaylists();
+    window.addEventListener('storage', onStorage);
+    window.addEventListener('focus', onFocus);
+    return () => {
+      window.removeEventListener('storage', onStorage);
+      window.removeEventListener('focus', onFocus);
+    };
   }, [syncPlaylists]);
 
   useEffect(() => {
@@ -394,6 +430,10 @@ export default function App() {
     setOutputGain(playerState.volume * audioBoost);
   }, [audioBoost, playerState.volume, setOutputGain]);
 
+  useEffect(() => {
+    applyQualityProfile();
+  }, [applyQualityProfile, audioQuality]);
+
   const rememberRecent = (soundId: string) => {
     setRecentSoundIds(prev => [soundId, ...prev.filter(x => x !== soundId)].slice(0, 3));
   };
@@ -417,8 +457,11 @@ export default function App() {
       };
     });
     rememberRecent(sound.id);
+    if (sound.isLoud && showVolumeWarning) {
+      showToast('Осторожно: трек отмечен как громкий. Проверьте уровень громкости.');
+    }
     setNowPlayingOpen(true);
-  }, [ensureAudioGraph, sounds]);
+  }, [ensureAudioGraph, showVolumeWarning, sounds]);
 
   const playNext = useCallback(() => {
     ensureAudioGraph();
@@ -521,6 +564,11 @@ export default function App() {
   const handleTimeUpdate = () => {
     const audio = audioRef.current;
     if (!audio || !audio.duration) return;
+    const now = performance.now();
+    if (now - lastTimeUpdateRef.current < 180 && audio.currentTime < audio.duration - 0.25) {
+      return;
+    }
+    lastTimeUpdateRef.current = now;
     setPlayerState(prev => ({
       ...prev,
       progress: audio.currentTime / audio.duration,
@@ -537,7 +585,7 @@ export default function App() {
       setCompletedOnceIds((prev) => new Set([...prev, endedId]));
     }
 
-    if (playerState.queue.length > 1) {
+    if (autoplayNext && playerState.queue.length > 1) {
       playNext();
       return;
     }
@@ -665,6 +713,18 @@ export default function App() {
     showToast('Отправлено в SoundPad. Если приложение не открыто, запустите SoundPad и повторите.');
   };
 
+  const ensureCommentsLoaded = useCallback((soundId: string) => {
+    if (commentsBySound[soundId]?.length) return;
+    fetchComments(soundId)
+      .then((items) => {
+        setCommentsBySound((prev) => ({
+          ...prev,
+          [soundId]: items.map((comment) => ({ ...comment, createdAt: new Date(comment.createdAt) })),
+        }));
+      })
+      .catch(() => undefined);
+  }, [commentsBySound]);
+
   const recentSounds = useMemo(
     () => recentSoundIds.map(id => sounds.find(s => s.id === id)).filter(Boolean) as Sound[],
     [recentSoundIds, sounds],
@@ -730,6 +790,7 @@ export default function App() {
     onCommentAdd: handleAddComment,
     onCommentLike: handleLikeComment,
     onCommentDelete: handleDeleteComment,
+    onCommentOpen: ensureCommentsLoaded,
     compact: isMobile,
     showCover: showCovers,
     coverBlur,

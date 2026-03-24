@@ -15,6 +15,8 @@ interface SettingsModalProps {
   onPreferPopularChange: (value: boolean) => void;
   showVolumeWarning: boolean;
   onShowVolumeWarningChange: (value: boolean) => void;
+  autoplayNext: boolean;
+  onAutoplayNextChange: (value: boolean) => void;
 }
 
 function ToggleRow({ label, description, checked, onChange }: { label: string; description?: string; checked: boolean; onChange: (v: boolean) => void }) {
@@ -82,6 +84,8 @@ export default function SettingsModal({
   onPreferPopularChange,
   showVolumeWarning,
   onShowVolumeWarningChange,
+  autoplayNext,
+  onAutoplayNextChange,
 }: SettingsModalProps) {
   return (
     <div
@@ -179,6 +183,7 @@ export default function SettingsModal({
             <div style={{ marginTop: 10 }}>
               <ToggleRow
                 label="Плавный переход между треками"
+                description="Плавно затухает текущий трек перед переключением на следующий."
                 checked={crossfade}
                 onChange={onCrossfadeChange}
               />
@@ -226,6 +231,12 @@ export default function SettingsModal({
                 label="Показывать предупреждение о громкости"
                 checked={showVolumeWarning}
                 onChange={onShowVolumeWarningChange}
+              />
+              <ToggleRow
+                label="Автоматически включать следующий трек"
+                description="Если выключено, воспроизведение остановится в конце композиции."
+                checked={autoplayNext}
+                onChange={onAutoplayNextChange}
               />
             </div>
           </section>

@@ -20,6 +20,7 @@ export interface UploadSoundInput {
   file?: File | null;
   coverFile?: File | null;
   urlInput?: string;
+  isLoud?: boolean;
 }
 
 const API_BASE = typeof window !== 'undefined' ? window.location.origin : '';
@@ -46,6 +47,7 @@ export async function uploadSound(input: UploadSoundInput): Promise<Sound> {
   form.append('description', input.description || '');
   form.append('lyrics', input.lyrics || '');
   form.append('duration', String(input.duration || 0));
+  form.append('isLoud', input.isLoud ? '1' : '0');
   if (input.urlInput) form.append('urlInput', input.urlInput);
   if (input.file) form.append('audio', input.file);
   if (input.coverFile) form.append('cover', input.coverFile);

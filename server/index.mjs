@@ -8,8 +8,10 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, '..');
-const dataDir = path.join(rootDir, 'data');
-const uploadsDir = path.join(rootDir, 'uploads');
+const persistentBase = (process.env.WMUSIC_STORAGE_DIR || process.env.RAILWAY_VOLUME_MOUNT_PATH || '').trim();
+const storageBase = persistentBase || (fs.existsSync('/data') ? '/data' : rootDir);
+const dataDir = path.join(storageBase, 'data');
+const uploadsDir = path.join(storageBase, 'uploads');
 const audioDir = path.join(uploadsDir, 'audio');
 const coverDir = path.join(uploadsDir, 'covers');
 const dbPath = path.join(dataDir, 'db.json');
@@ -160,7 +162,7 @@ async function transcribeAudioFromOpenAI(audioAbsolutePath, originalFileName) {
 }
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, timestamp: Date.now() });
+  res.json({ ok: true, timestamp: Date.now(), storageBase });
 });
 
 app.get('/api/sounds', (_req, res) => {
@@ -177,6 +179,7 @@ app.post('/api/sounds', upload.fields([{ name: 'audio', maxCount: 1 }, { name: '
   const genre = String(req.body.genre || 'other').trim();
   const description = String(req.body.description || '').trim();
   const inputLyrics = String(req.body.lyrics || '').trim();
+  const isLoud = String(req.body.isLoud || '0') === '1';
   const duration = Number(req.body.duration || 0) || 0;
   const urlInput = String(req.body.urlInput || '').trim();
 
@@ -218,6 +221,7 @@ app.post('/api/sounds', upload.fields([{ name: 'audio', maxCount: 1 }, { name: '
     coverUrl: coverFile ? `/uploads/covers/${coverFile.filename}` : undefined,
     description,
     lyrics,
+    isLoud,
     isMine: true,
   };
 
